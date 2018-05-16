@@ -1,0 +1,149 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+<event size="1" name="pair_run"/>
+<event size="1" name="number"/>
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="1" name="thymio-II">var myId = 0b1000
+var leader = 0 #leader or follower?
+var received = 0 #var to keep the received message temporarily
+var tempOp = 0 # temp var to parse the OpCode
+var followerTargetX = 0
+var followerTargetY = 0
+var followerTargetA = 0
+var SENDTIME = 5
+var sendCount = 0
+var sendGotos = 0
+var followerCount = 0
+var followersNeeded = 2
+var receivedMessages[] = [0, 0, 0, 0, 0, 0, 0, 0]
+
+#set timers
+timer.period[0] = 1000
+
+# reset outputs
+call leds.top(0,0,0)
+call leds.bottom.left(0,0,0)
+call leds.bottom.right(0,0,0)
+call leds.circle(32,0,0,0,0,0,0,0)
+
+
+sub checkOpCode
+	tempOp = received >> 7
+	
+	if  tempOp == 0b000 then #SYN
+		prox.comm.tx = 0b0010000000 | myId #send a syn ack
+		call prox.comm.enable(1)
+
+	elseif  tempOp == 0b001 then #SYN ACK
+		if  leader == 1 then
+			if  followerCount &lt; followersNeeded then
+				followerCount++
+				prox.comm.tx = 0b0100000000 | myId #send a hello
+				call prox.comm.enable(1)
+				sendGotos = 1
+			end
+		end
+
+	elseif  tempOp == 0b010 then #HELLO
+		#I'm going to receive stuff
+		receivedMessages[0] = 32
+		call leds.circle(receivedMessages[0], receivedMessages[1], receivedMessages[2], receivedMessages[3], receivedMessages[4], receivedMessages[5], receivedMessages[6], receivedMessages[7])
+
+	elseif  tempOp == 0b011 then #GOTO x
+		followerTargetX = received | 0b0000000000
+		receivedMessages[1] = 32
+		call leds.circle(receivedMessages[0], receivedMessages[1], receivedMessages[2], receivedMessages[3], receivedMessages[4], receivedMessages[5], receivedMessages[6], receivedMessages[7])
+		
+	elseif  tempOp == 0b100 then #GOTO y
+		followerTargetY = received | 0b0000000000
+		receivedMessages[2] = 32
+		call leds.circle(receivedMessages[0], receivedMessages[1], receivedMessages[2], receivedMessages[3], receivedMessages[4], receivedMessages[5], receivedMessages[6], receivedMessages[7])
+				
+	elseif  tempOp == 0b101 then #GOTO alfa
+		followerTargetA = received | 0b0000000000
+		receivedMessages[3] = 32
+		call leds.circle(receivedMessages[0], receivedMessages[1], receivedMessages[2], receivedMessages[3], receivedMessages[4], receivedMessages[5], receivedMessages[6], receivedMessages[7])
+		
+	elseif  tempOp == 0b110 then #PUSH
+		# kek
+
+	elseif  tempOp == 0b111 then #ERROR
+		# if follower ignore
+	end
+
+
+onevent prox
+
+    when prox.horizontal[2] >= 2000 do
+    		received = 0b0000000110 | 0b0000000000
+    		emit pair_run received
+    end
+
+
+onevent buttons
+    when  button.forward == 1 do
+        call prox.comm.enable(1)
+        prox.comm.tx = 0b1100000000
+        call leds.top(32, 0, 32)
+        #motor.left.target = 100
+        #motor.right.target = 100
+        emit pair_run 0
+    end
+    
+    when  button.backward == 1 do
+        call prox.comm.enable(0)
+        call leds.top(0, 0, 32)
+        #motor.left.target = 0
+        #motor.right.target = 0
+        emit pair_run 2
+    end
+
+
+
+onevent prox.comm
+    #motor.left.target = -100
+    #motor.right.target = -100
+    
+    if  prox.comm.rx == 0 then
+        call leds.top(0, 32, 0)
+    else
+        call leds.top(32, 0, 0)
+    end
+    
+    received = prox.comm.rx
+    
+    callsub checkOpCode
+    
+    emit number tempOp
+    
+    
+    
+onevent timer0
+	if sendCount &lt; SENDTIME then
+		sendCount++
+	else
+		sendCount = 0
+		
+		if  sendGotos == 1 then
+			
+		elseif sendGotos == 2 then
+		
+		elseif sendGotos == 3 then
+			call prox.comm.enable(0)
+		end
+	end</node>
+
+
+</network>

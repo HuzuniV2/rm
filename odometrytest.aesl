@@ -3,8 +3,7 @@
 
 
 <!--list of global events-->
-<event size="1" name="center"/>
-<event size="1" name="teta"/>
+<event size="1" name="value"/>
 
 
 <!--list of constants-->
@@ -15,13 +14,11 @@
 
 
 <!--node thymio-II-->
-<node nodeId="1" name="thymio-II">
-
-# Constants
-var TIME = 50     #Duration of run (tenths of seconds)
+<node nodeId="1" name="thymio-II"># Constants
+var TIME = 100      #Duration of run (tenths of seconds)
 var BASELINE = 70  #Distance between wheels (millimeters)
 var LEFT = 200      #Power setting of left wheel
-var RIGHT  = 200    #Power setting of right wheel
+var RIGHT = 200     #Power setting of right wheel
 var SPEED = 30     #speed of robot per 100 power setting (*10)
 
 var dleft     # Distance traveled by the left wheel
@@ -35,47 +32,22 @@ var tsin      # cosine of theta
 var state     # 0 = off, 1 = run
 var time      # Counter of tenths of seconds
 
-var dist = 0
-var currentDir = 90
-var dists[2] = [60,40]
-var dirs[2] = [90,180]
-var TURNSPEED = 233 # correct speed to turn 90 degrees
-var calc = 0
+# Set timer to expire every tenth of a second
+timer.period[0] = 100
 
-timer.period[0] = 10 # executa acoes e actualiza os valores
-timer.period[1] = 10 # faz cehck das vars
-
-onevent button.forward
-	if prox.ground.delta[0] &lt; 900 then
-		while dist &lt; dists[0] do
-			calc = 1
-			callsub go
-			dist += dcenter
-			emit center dcenter
-		end
-		calc = 0
-		callsub adjust
-		dist = 0
-		while dist &lt; dists[1] do
-			callsub go
-			calc = 1
-			dist += dcenter
-			emit center dcenter
-		end
-		calc = 0
-		callsub adjust2
-	end
-	
-
-sub timer0
-	motor.left.target  = TURNSPEED
-	motor.right.target = -TURNSPEED
-
-sub timer1
-	motor.left.target  = -TURNSPEED
-	motor.right.target = TURNSPEED
-	
-
+# Touch forward button to start run
+# Touch center button to stop run (not used)
+onevent buttons
+  when button.forward == 0 do
+    state = 1
+    time = 0
+    motor.left.target =  LEFT
+    motor.right.target = RIGHT
+  end
+  when button.center == 0 do
+    motor.left.target = 0
+    motor.right.target = 0
+  end
 
 # Compute the odometry
 sub odometry
@@ -99,44 +71,21 @@ sub odometry
   # Factor is 16-bit 32767 for sin/cos = 1.0
   call math.muldiv(dx, dcenter, -tsin, 32767)
   call math.muldiv(dy, dcenter, tcos, 32767)
-  
-sub go
-	motor.left.target =  LEFT
-    motor.right.target = RIGHT
-    
-sub adjust
-		if currentDir > dirs[0] and abs(currentDir - dirs[0]) &lt; 180 then
-			callsub timer0
-		else if currentDir &lt; dirs[0] or currentDir > dirs[0] then
-			callsub timer1
-		end
-	end	
-	
-sub adjust2
-		if currentDir > dirs[1] and abs(currentDir - dirs[1]) &lt; 180 then
-			callsub timer0
-		else if currentDir &lt; dirs[1] or currentDir > dirs[1] then
-			callsub timer1
-		end
-	end	
 
-
+# Every tenth of a second, increment the counter time
+# When time = TIME, compute the odometry and stop the motors
 onevent timer0
-	if calc == 1 then
-		callsub odometry
-	end
-
-
-
-
-
-
-
-
-
-
-
-</node>
+  if  state == 0 then
+  	return
+  end
+  time++
+  if  time == TIME then
+  	callsub odometry
+  	emit value dcenter
+    state = 0
+    motor.left.target = 0
+    motor.right.target = 0
+  end</node>
 
 
 </network>

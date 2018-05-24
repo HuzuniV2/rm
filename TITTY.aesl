@@ -23,10 +23,39 @@ var SPEED = 200  # wheel speed for each cell/second
 var TURNSPEED = 233 # correct speed to turn 90 degrees
 var OBSR = 0 # obstaculo ´a direita
 var OBSL = 0 # obstaculo ah esquerda
+#----------------------------------------------------------
+var dleft     # Distance traveled by the left wheel
+var dright    # Distance traveled by the right wheel
+var dcenter   # Distance traveled by the center of the robot
+var theta     # Change of heading
+var dx        # Change of x
+var dy        # Change of y
+var tcos      # sin of theta
+var tsin      # cosine of theta
+var state     # 0 = off, 1 = run
+var time      # Counter of tenths of seconds
 
 
 timer.period[0] = 0 # executa acoes e actualiza os valores
 timer.period[1] = 0 # faz cehck das vars
+
+onevent motor
+	call math.muldiv(dleft, motor.left.speed, SPEED*100, 100*10*10)
+  call math.muldiv(dright, motor.right.speed, SPEED*100, 100*10*10)
+  dcenter = (dleft+dright)/2
+
+  # Change of heading and its sin and cosine
+  # Factor is 10 for axle width in millimeters and
+  #   100 for hundredths of radians
+  theta = ((dright-dleft)*10*100)/70
+  # Factor is 100 which is approximately 16-bit 32767 / pi 314
+  call math.cos(tcos, theta*100)
+  call math.sin(tsin, theta*100)
+
+  # Change of x and y
+  # Factor is 16-bit 32767 for sin/cos = 1.0
+  call math.muldiv(dx, dcenter, -tsin, 32767)
+  call math.muldiv(dy, dcenter, tcos, 32767)
 
 onevent timer0
 	if prox.ground.delta[0] > 800 then
@@ -35,6 +64,7 @@ onevent timer0
 		if walk == 1 then
 			motor.right.target = SPEED
 			motor.left.target  = SPEED
+			emit test dcenter
 			walk = 0	
 			
 		elseif  walk == 0 and motor.right.target == SPEED and motor.left.target  == SPEED then

@@ -21,6 +21,9 @@ var turnLeft = 0 # flag for turning left, 0 dead 1 do
 var turnRight = 0 # flag for turning right, 0 dead 1 do
 var SPEED = 200  # wheel speed for each cell/second
 var TURNSPEED = 233 # correct speed to turn 90 degrees
+var OBSR = 0 # obstaculo ´a direita
+var OBSL = 0 # obstaculo ah esquerda
+
 
 timer.period[0] = 0 # executa acoes e actualiza os valores
 timer.period[1] = 0 # faz cehck das vars
@@ -28,8 +31,7 @@ timer.period[1] = 0 # faz cehck das vars
 onevent timer0
 	if prox.ground.delta[0] > 800 then
 		callsub goal
-	else
-
+	else 
 		if walk == 1 then
 			motor.right.target = SPEED
 			motor.left.target  = SPEED
@@ -39,7 +41,8 @@ onevent timer0
 			motor.right.target = 0
 			motor.left.target  = 0
 			if  currentDir == 90 then
-				currentY += 1
+				currentY += 1 
+				
 			elseif currentDir == 180 then
 				currentX -= 1
 			elseif currentDir == 270 then
@@ -79,8 +82,21 @@ onevent timer0
 	end
 	
 onevent timer1
-
-	if currentX &lt; targetX then
+	if prox.horizontal[2] > 1400 then
+		if  OBSR == 0 and OBSL == 0 then
+			turnLeft = 1
+		elseif  OBSR == 0 and OBSL == 1 then
+			turnLeft = 1
+			OBSR = 1
+			OBSL = 0
+		else
+			turnRight = 1
+			walk = 1
+			OBSR = 0
+			OBSL = 0
+		end
+		# SE TIVER UM OBJECTO QUE APARECA NO DA FRENTE E PELO MENOS UM DOS LATERAIS
+	elseif currentX &lt; targetX then
 		if currentDir == 180 then     # apontar para a direcao certa e mandar andar
 			turnRight = 1
 		elseif currentDir == 90 then

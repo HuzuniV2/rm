@@ -41,17 +41,14 @@ var SPEED = 200  # wheel speed for each cell/second
 var TURNSPEED = 233 # correct speed to turn 90 degrees
 
 timer.period[0] = 0 # executa acoes e actualiza os valores
-timer.period[1] = 2000 # faz cehck das vars
+timer.period[1] = 0 # faz cehck das vars
 
-onevent prox
+onevent timer0
 	if prox.ground.delta[0] > 800 then
-		motor.right.target = 0
-		motor.left.target = 0
-		walk = 0
-		turnLeft = 0
-		turnRight = 0
+		callsub goal
 	else
 		callsub odometry
+		emit test dcenter
 		if walk == 1 then
 			motor.right.target = SPEED
 			motor.left.target  = SPEED
@@ -154,6 +151,30 @@ onevent timer1
 	end	
 	
 end
+
+	
+onevent buttons
+	when button.forward == 1 do
+		call leds.top(0, 32, 0)
+		timer.period[0] = 2000 # executa acoes e actualiza os valores
+		timer.period[1] = 3000 # faz cehck das vars
+	end
+	
+	
+	when button.backward == 1 do
+		call leds.top(32, 0, 0)
+		motor.right.target = 0
+		motor.left.target  = 0
+	end
+
+
+sub goal
+	motor.left.target = 0
+	motor.right.target = 0
+	timer.period[0] = 0 
+	timer.period[1] = 0
+
+
 	
 	
 # Compute the odometry

@@ -14,7 +14,25 @@
 
 
 <!--node thymio-II-->
-<node nodeId="1" name="thymio-II">var currentX = 0 var currentY = 0 var currentDir = 360
+<node nodeId="1" name="thymio-II">var TIME = 20
+var BASELINE = 70  #Distance between wheels (millimeters)
+var LEFT = 200      #Power setting of left wheel
+var RIGHT = 200     #Power setting of right wheel
+var SPEEDR = 30     #speed of robot per 100 power setting (*10)
+
+var dleft     # Distance traveled by the left wheel
+var dright    # Distance traveled by the right wheel
+var dcenter   # Distance traveled by the center of the robot
+var theta     # Change of heading
+var dx        # Change of x
+var dy        # Change of y
+var tcos      # sin of theta
+var tsin      # cosine of theta
+var state     # 0 = off, 1 = run
+var time      # Counter of tenths of seconds
+
+
+var currentX = 0 var currentY = 0 var currentDir = 360
 var targetX  = 5  var targetY = 5  var targetDir = 180
 var walk = 0     # flag for going straight(hehexd), 0 dead 1 do
 var turnLeft = 0 # flag for turning left, 0 dead 1 do
@@ -23,21 +41,28 @@ var SPEED = 200  # wheel speed for each cell/second
 var TURNSPEED = 233 # correct speed to turn 90 degrees
 
 timer.period[0] = 0 # executa acoes e actualiza os valores
-timer.period[1] = 0 # faz cehck das vars
+timer.period[1] = 2000 # faz cehck das vars
 
-onevent timer0
+onevent prox
 	if prox.ground.delta[0] > 800 then
-		callsub goal
+		motor.right.target = 0
+		motor.left.target = 0
+		walk = 0
+		turnLeft = 0
+		turnRight = 0
 	else
-
+		callsub odometry
 		if walk == 1 then
 			motor.right.target = SPEED
 			motor.left.target  = SPEED
-			walk = 0	
+			if dcenter > 40 then
+				walk = 0	
+			end	
 			
 		elseif  walk == 0 and motor.right.target == SPEED and motor.left.target  == SPEED then
 			motor.right.target = 0
 			motor.left.target  = 0
+			dcenter = 0
 			if  currentDir == 90 then
 				currentY += 1
 			elseif currentDir == 180 then
@@ -131,27 +156,29 @@ onevent timer1
 end
 	
 	
-	
-onevent buttons
-	when button.forward == 1 do
-		call leds.top(0, 32, 0)
-		timer.period[0] = 1000 # executa acoes e actualiza os valores
-		timer.period[1] = 2000 # faz cehck das vars
-	end
-	
-	
-	when button.backward == 1 do
-		call leds.top(32, 0, 0)
-		motor.right.target = 0
-		motor.left.target  = 0
-	end
+# Compute the odometry
+sub odometry
+  # Distances traveled by left and right motors
+  # Factor is: 100 for motor powers and
+  #   10 each for power to speed and time in tenths of a second
+  # Center distance is the average of the left and right
+  call math.muldiv(dleft, motor.left.speed, SPEEDR*TIME, 100*10*10)
+  call math.muldiv(dright, motor.right.speed, SPEEDR*TIME, 100*10*10)
+  dcenter = (dleft+dright)/2
 
+  # Change of heading and its sin and cosine
+  # Factor is 10 for axle width in millimeters and
+  #   100 for hundredths of radians
+  theta = ((dright-dleft)*10*100)/BASELINE
+  # Factor is 100 which is approximately 16-bit 32767 / pi 314
+  call math.cos(tcos, theta*100)
+  call math.sin(tsin, theta*100)
 
-sub goal
-	motor.left.target = 0
-	motor.right.target = 0
-	timer.period[0] = 0 
-	timer.period[1] = 0
+  # Change of x and y
+  # Factor is 16-bit 32767 for sin/cos = 1.0
+  call math.muldiv(dx, dcenter, -tsin, 32767)
+  call math.muldiv(dy, dcenter, tcos, 32767)
+
 
 
 

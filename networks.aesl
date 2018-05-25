@@ -3,7 +3,6 @@
 
 
 <!--list of global events-->
-<event size="1" name="pair_run"/>
 <event size="0" name="syn"/>
 <event size="0" name="synack"/>
 <event size="0" name="hello"/>
@@ -23,7 +22,7 @@
 
 <!--node thymio-II-->
 <node nodeId="1" name="thymio-II">var myId = 0b0000
-var leader = 0 #leader or follower?
+var leader = 1 #leader or follower?
 var received = 0 #var to keep the received message temporarily
 var tempOp = 0 # temp var to parse the OpCode
 var followerTargetX = 5
@@ -71,7 +70,7 @@ sub checkOpCode
 
 	elseif  tempOp == 0b011 then #GOTO x
 		if  receivedMessages[1] != 32 then
-			followerTargetX = (received &lt;&lt; 3) * 90
+			followerTargetX = received &amp; 0b0001111111
 			receivedMessages[1] = 32
 			call leds.circle(receivedMessages[0], receivedMessages[1], receivedMessages[2], receivedMessages[3], receivedMessages[4], receivedMessages[5], receivedMessages[6], receivedMessages[7])
 			emit gotox followerTargetX
@@ -79,16 +78,15 @@ sub checkOpCode
 		
 	elseif  tempOp == 0b100 then #GOTO y
 		if  receivedMessages[2] != 32 then
-			followerTargetY = (received &lt;&lt; 3) * 90
+			followerTargetY = received &amp; 0b0001111111
 			receivedMessages[2] = 32
 			call leds.circle(receivedMessages[0], receivedMessages[1], receivedMessages[2], receivedMessages[3], receivedMessages[4], receivedMessages[5], receivedMessages[6], receivedMessages[7])
 			emit gotoy followerTargetY
 		end
 				
 	elseif  tempOp == 0b101 then #GOTO alfa
-		emit pair_run 100
 		if  receivedMessages[3] != 32 then
-			followerTargetA = (received &lt;&lt; 3) * 90
+			followerTargetA = (received &amp; 0b0001111111) * 90
 			receivedMessages[3] = 32
 			call leds.circle(receivedMessages[0], receivedMessages[1], receivedMessages[2], receivedMessages[3], receivedMessages[4], receivedMessages[5], receivedMessages[6], receivedMessages[7])
 			emit gotoa followerTargetA
@@ -116,7 +114,7 @@ onevent prox
 onevent buttons
     when  button.forward == 1 do
         call prox.comm.enable(1)
-        prox.comm.tx = 0 #0b1100000000 | myId #send a syn
+        prox.comm.tx = 0b1100000000 | myId #send a syn
         sendCount = 0
         call leds.top(32, 0, 32)
     end

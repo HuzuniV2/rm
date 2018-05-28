@@ -285,9 +285,9 @@ onevent timer1
 		push++
 		canWalk = 0
 		callsub go
-	elseif  push &lt; 5 then #conta enquanto faz push
+	elseif  getFollower == 2 and push &lt; 5 then #conta enquanto faz push
 		push++
-	elseif push == 5 then #para o push
+	elseif getFollower == 2 and push == 5 then #para o push
 		motor.left.target = 0
 		motor.right.target = 0
 	elseif  canWalk == 1 then

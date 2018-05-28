@@ -133,15 +133,14 @@ sub goal
 	motor.right.target = 0
 	timer.period[0] = 0 
 	timer.period[1] = 0
-
-sub wait
-	motor.left.target = 0
-	motor.right.target = 0 
 	
 sub go
-	motor.left.target = SPEEDL
-	motor.right.target = SPEEDR
+	motor.left.target = 500
+	motor.right.target = 500
 
+sub stop
+	motor.left.target = 0
+	motor.right.target = 0
 
 onevent motor
   call math.muldiv(dleft, motor.left.speed, 30*100, 100*10*10)
@@ -164,13 +163,16 @@ onevent buttons
     when  button.backward == 1 do
         call prox.comm.enable(1)
         prox.comm.tx = 0
-
+        
+        motor.left.target = 0
+        motor.right.target = 0
 		timer.period[0] = 0
 		timer.period[1] = 0
 		currentX = 0
 		currentY = 0
 		currentDir = 360
 		obst = 0
+		wait = 0
 
 		# reset outputs
 		call leds.top(0,0,32)
@@ -196,63 +198,67 @@ onevent prox.comm
     
     
 onevent timer0
-	if prox.ground.delta[0] > 800 and wait &lt; 3 then
-		callsub wait
-		wait += 1
-	elseif prox.ground.delta[0] > 800 and wait > 3 then
-		callsub go
-	else 
-		if walk == 1 then
-			motor.right.target = SPEEDR
-			motor.left.target  = SPEEDL
-			walk = 0	
-		elseif  walk == 0 and motor.right.target == SPEEDR and motor.left.target  == SPEEDL then
-			motor.right.target = 0
-			motor.left.target  = 0
-			if  currentDir == 90 then
-				currentY += 1 
+	if walk == 1 then
+		motor.right.target = SPEEDR
+		motor.left.target  = SPEEDL
+		walk = 0	
+	elseif  walk == 0 and motor.right.target == SPEEDR and motor.left.target  == SPEEDL then
+		motor.right.target = 0
+		motor.left.target  = 0
+		if  currentDir == 90 then
+			currentY += 1 
 				
-			elseif currentDir == 180 then
-				currentX -= 1
-			elseif currentDir == 270 then
-				currentY -= 1	
-			else
-				currentX += 1
-			end
+		elseif currentDir == 180 then
+			currentX -= 1
+		elseif currentDir == 270 then
+			currentY -= 1	
+		else
+			currentX += 1
+		end
 						
-		elseif turnLeft == 1 then
-			motor.left.target  =  -TURNSPEED
-			motor.right.target = TURNSPEED
-			turnLeft = 2
+	elseif turnLeft == 1 then
+		motor.left.target  =  -TURNSPEED
+		motor.right.target = TURNSPEED
+		turnLeft = 2
 		
-		elseif turnLeft == 2 and motor.right.target != 0 and motor.left.target  != 0 then
-			motor.right.target = 0
-			motor.left.target  = 0
-			turnLeft = 0
-			currentDir += 90
-			if  currentDir > 360 then
-				currentDir = 90
-			end
+	elseif turnLeft == 2 and motor.right.target != 0 and motor.left.target  != 0 then
+		motor.right.target = 0
+		motor.left.target  = 0
+		turnLeft = 0
+		currentDir += 90
+		if  currentDir > 360 then
+			currentDir = 90
+		end
 		
-		elseif turnRight == 1 then
-			motor.left.target  = TURNSPEED
-			motor.right.target = -TURNSPEED
-			turnRight = 2
+	elseif turnRight == 1 then
+		motor.left.target  = TURNSPEED
+		motor.right.target = -TURNSPEED
+		turnRight = 2
 			
-		elseif turnRight == 2 and motor.right.target != 0 and motor.left.target  != 0 then
-			motor.right.target = 0
-			motor.left.target  = 0
-			turnRight = 0
-			currentDir -= 90
-			if  currentDir &lt;= 0 then
-				currentDir = 360
-			end
+	elseif turnRight == 2 and motor.right.target != 0 and motor.left.target  != 0 then
+		motor.right.target = 0
+		motor.left.target  = 0
+		turnRight = 0
+		currentDir -= 90
+		if  currentDir &lt;= 0 then
+			currentDir = 360
 		end
 	end
 	
+	
 onevent timer1
-
-	if  canWalk == 1 then
+	if prox.ground.delta[0] > 800 and wait &lt; 2 then
+		wait++
+	elseif prox.ground.delta[0] > 800 and wait >= 2 then
+		canWalk = 0
+		wait++
+		callsub go
+	elseif wait != 0 and wait &lt; 5 then
+		wait++
+	elseif wait >= 5 then
+		wait = 0
+		callsub stop
+	elseif  canWalk == 1 then
 		if (prox.horizontal[0] > 1400 or prox.horizontal[1] > 1400 or prox.horizontal[2] > 1400 or
 		   prox.horizontal[3] > 1400 or prox.horizontal[4] > 1400) and (obst == 0 or obst > 3) and wait == 0 then
 				obst = 1

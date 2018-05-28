@@ -17,7 +17,7 @@
 <!--node thymio-II-->
 <node nodeId="1" name="thymio-II"># FLAGS
 var SPEEDL = 300  # left wheel speed for each cell/second
-var SPEEDR = 305 # right wheel speed for each cell/second
+var SPEEDR = 308 # right wheel speed for each cell/second
 var TURNSPEED = 233 # correct speed to turn 90 degrees
 #----------------------------------------------------------
 # VARS
@@ -25,7 +25,7 @@ var dleft     # Distance traveled by the left wheel
 var dright    # Distance traveled by the right wheel
 var dcenter   # Distance traveled by the center of the robot
 var currentX = 0 var currentY = 0 var currentDir = 360
-var targetX  = 5  var targetY = 5  var targetDir = 180
+var targetX  = 5  var targetY = 5  var targetDir = 90
 var walk = 0     # flag for going straight(hehexd), 0 dead 1 do
 var turnLeft = 0 # flag for turning left, 0 dead 1 do
 var turnRight = 0 # flag for turning right, 0 dead 1 do

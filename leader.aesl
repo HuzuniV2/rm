@@ -267,7 +267,7 @@ onevent timer1
 		followerTargetX = currentX
 		followerTargetY = currentY - 1
 		followerTargetA = currentDir
-		targetX = 2
+		targetX = 1
 		targetY = 0
 		targetDir = 180
 		

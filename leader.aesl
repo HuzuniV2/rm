@@ -49,7 +49,7 @@ var dleft     # Distance traveled by the left wheel
 var dright    # Distance traveled by the right wheel
 var dcenter   # Distance traveled by the center of the robot
 var currentX = 0 var currentY = 2 var currentDir = 360
-var targetX  = 5  var targetY = 100  var targetDir = 360
+var targetX  = 5  var targetY = 5  var targetDir = 360
 var walk = 0     # flag for going straight(hehexd), 0 dead 1 do
 var turnLeft = 0 # flag for turning left, 0 dead 1 do
 var turnRight = 0 # flag for turning right, 0 dead 1 do
@@ -258,7 +258,7 @@ onevent timer0
 		end
 	end
 	
-	emit pos [currentX, currentY, currentDir]
+	#emit pos [currentX, currentY, currentDir]
 	
 onevent timer1
 
@@ -272,24 +272,32 @@ onevent timer1
 		targetDir = 180
 		
 		call prox.comm.enable(1)
-      prox.comm.tx = 0b1100000000 | myId #send a syn
-      sendCount = 0
+		prox.comm.tx = 0b1100000000 | myId #send a syn
+		sendCount = 0
+		emit test 1
 	elseif getFollower == 2 and push == 0 then #quando acaba de enviar a info toda para o follower
 		push++
 		targetX = followerTargetX
 		targetY = followerTargetY - 2
 		targetDir = followerTargetA
+		emit test 2
 	elseif prox.ground.delta[0] > 800 and getFollower == 2 and push == 1 and wait &lt; 2 then #quando deteta a folha pela segunda vez
 		wait++
+		emit test 3
 	elseif prox.ground.delta[0] > 800 and getFollower == 2 and push == 1 and wait >= 2 then #depois de esperar
 		push++
+		getFollower++
 		canWalk = 0
+		getFollower = 3
 		callsub go
-	elseif  getFollower == 2 and push &lt; 5 then #conta enquanto faz push
+		emit test 4
+	elseif  getFollower == 3 and push &lt; 5 then #conta enquanto faz push
 		push++
-	elseif getFollower == 2 and push == 5 then #para o push
+		emit test 5
+	elseif getFollower == 3 and push == 5 then #para o push
 		motor.left.target = 0
 		motor.right.target = 0
+		emit test 6
 	elseif  canWalk == 1 then
 		if (prox.horizontal[0] > 1400 or prox.horizontal[1] > 1400 or prox.horizontal[2] > 1400 or
 		   prox.horizontal[3] > 1400 or prox.horizontal[4] > 1400) and (obst == 0 or obst > 3) and wait != 0 then

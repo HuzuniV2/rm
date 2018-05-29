@@ -267,11 +267,11 @@ onevent timer1
 		followerTargetX = currentX
 		followerTargetY = currentY - 1
 		followerTargetA = currentDir
-		targetX = 1
+		targetX = 1 #the initial follow distance when coming back
 		targetY = 0
 		targetDir = 180
 		
-		call prox.comm.enable(1)
+		#call prox.comm.enable(1)
 		prox.comm.tx = 0b1100000000 | myId #send a syn
 		sendCount = 0
 		emit test 1
@@ -364,10 +364,12 @@ onevent timer1
 			else
 				walk = 1
 			end
+		elseif currentX == targetX and currentY == targetY and currentDir == targetDir and getFollower == 1 then
+			call prox.comm.enable(1)
 		elseif currentX == targetX and currentY == targetY then
 			if currentDir > targetDir and abs(currentDir - targetDir) &lt; 180 then
 				turnRight = 1
-			else if currentDir &lt; targetDir or currentDir > targetDir then
+			elseif currentDir &lt; targetDir or currentDir > targetDir then
 				turnLeft = 1
 			end
 		end
@@ -384,22 +386,21 @@ onevent timer1
 			call prox.comm.enable(1)
 			sendGotos++
 			emit sendGoto 1
-		elseif sendGotos == 2 then
+	elseif sendGotos == 2 then
 			prox.comm.tx = 0b1000000000 | followerTargetY #send a goto y
 			call prox.comm.enable(1)
 			sendGotos++
 			emit sendGoto 2
-		elseif sendGotos == 3 then
+	elseif sendGotos == 3 then
 			prox.comm.tx = 0b1010000000 | (followerTargetA/90) #send a goto a
 			call prox.comm.enable(1)
 			sendGotos++
 			emit sendGoto 3
-		elseif sendGotos == 4 then
+	elseif sendGotos == 4 then
 			call prox.comm.enable(0)
 			sendGotos = 0
 			getFollower = 2
 			emit sendGoto 4
-		end
 	end
 	
 end

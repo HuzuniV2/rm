@@ -40,15 +40,15 @@ var followersNeeded = 1
 var receivedMessages[] = [0, 0, 0, 0, 0, 0, 0, 0]
 
 # FLAGS
-var SPEEDL = 300  # left wheel speed for each cell/second
-var SPEEDR = 308 # right wheel speed for each cell/second
+var SPEEDL = 500  # left wheel speed for each cell/second
+var SPEEDR = 485 # right wheel speed for each cell/second
 var TURNSPEED = 233 # correct speed to turn 90 degrees
 #----------------------------------------------------------
 # VARS
 var dleft     # Distance traveled by the left wheel
 var dright    # Distance traveled by the right wheel
 var dcenter   # Distance traveled by the center of the robot
-var currentX = 0 var currentY = 2 var currentDir = 360
+var currentX = 0 var currentY = 1 var currentDir = 360
 var targetX  = 5  var targetY = 5  var targetDir = 360
 var walk = 0     # flag for going straight(hehexd), 0 dead 1 do
 var turnLeft = 0 # flag for turning left, 0 dead 1 do
@@ -160,7 +160,7 @@ onevent buttons
 		timer.period[0] = 1000 # executa acoes e actualiza os valores
 		timer.period[1] = 2000 # faz cehck das vars
 		currentX = 0
-		currentY = 2
+		currentY = 1
 		currentDir = 360
 		targetX  = 5
 		targetY = 100
@@ -265,7 +265,7 @@ onevent timer1
 	if prox.ground.delta[0] > 800 and getFollower == 0 then #quando deteta a folha inicialmente
 		getFollower++
 		followerTargetX = currentX
-		followerTargetY = currentY + 2
+		followerTargetY = currentY - 1
 		followerTargetA = currentDir
 		targetX = 2
 		targetY = 0
@@ -278,7 +278,7 @@ onevent timer1
 	elseif getFollower == 2 and push == 0 then #quando acaba de enviar a info toda para o follower
 		push++
 		targetX = followerTargetX
-		targetY = followerTargetY - 2
+		targetY = followerTargetY + 1
 		targetDir = followerTargetA
 		emit test 2
 	elseif prox.ground.delta[0] > 800 and getFollower == 2 and push == 1 and wait &lt; 2 then #quando deteta a folha pela segunda vez
